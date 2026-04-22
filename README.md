@@ -22,10 +22,7 @@ A aplicação **checkout-frontend** é uma aplicação que simula o frontend de 
 ├── server.js
 └── tree.bak
 
-4 directories, 12 files
 ```
-<!-- readme-tree end -->
-=======
 <!-- readme-tree end -->
 
 
@@ -46,4 +43,3 @@ Por último temos o arquivo do pipeline **04-pipeline-checkout-frontend.yaml** o
 
 Ao final da execução do pipeline, uma vez que obtenha o sucesso esperado ele efetua a atualização da tag de versão do container no repositório Helm que é destinado exclusivamente para deploy da aplicação. O pipeline executará a tarefa de commit no repositório remoto, visando atualizar o arquivo **values-dev.yaml** no valor destinado a versão da tag. 
 
->>>>>>> c63c7f2 (readme updt)
