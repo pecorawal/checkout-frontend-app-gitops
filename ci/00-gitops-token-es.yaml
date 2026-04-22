@@ -1,0 +1,24 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-creds
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gcp-cluster-secretstore # O que você já tem funcionando
+  target:
+    name: github-creds # O nome do Secret que o Kubernetes vai criar
+    template:
+      type: kubernetes.io/basic-auth
+      metadata:
+        annotations:
+          tekton.dev/git-0: https://github.com
+      data:
+        # No GitHub, o username pode ser qualquer coisa (usamos 'git-user'), o que vale é o token como password
+        username: "git-user"
+        password: "{{ .token | toString }}"
+  data:
+    - secretKey: token
+      remoteRef:
+        key: GITHUB-GITOPS-TOKEN

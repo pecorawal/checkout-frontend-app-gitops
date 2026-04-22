@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: update-gitops-helm
+spec:
+  params:
+    - name: APP_NAME
+    - name: NEW_TAG
+  steps:
+    - name: git-commit-push
+      image: alpine/git:v2.36.2
+      script: |
+        #!/bin/sh
+        set -e
+        git clone https://github.com/pecorawal/gitops-workloads-helm.git /tmp/gitops
+        cd /tmp/gitops
+        FILE="apps/$(params.APP_NAME)/values-dev.yaml"
+        sed -i "s/tag: .*/tag: \"$(params.NEW_TAG)\"/" $FILE
+        git config user.email "pipeline@tekton.local"
+        git config user.name "Tekton Pipeline"
+        git add $FILE
+        git commit -m "Autodeploy: Atualizando $(params.APP_NAME) para tag $(params.NEW_TAG) em DEV"
+        git push origin main

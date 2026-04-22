@@ -1,0 +1,78 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: pipeline-checkout-frontend
+spec:
+  params:
+    - name: APP_NAME
+      default: "checkout-frontend"
+    - name: GIT_SOURCE_REPO
+      default: "https://github.com/pecorawal/checkout-frontend-app-gitops.git"
+    - name: IMAGE_REGISTRY_URL
+      default: "image-registry.openshift-image-registry.svc:5000/checkout-frontend-ci/checkout-frontend"
+    - name: GITOPS_REPO
+      default: "https://github.com/pecorawal/gitops-workloads-helm.git"
+  workspaces:
+    - name: shared-workspace
+  tasks:
+    - name: fetch-source
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: URL
+          value: $(params.GIT_SOURCE_REPO)
+        - name: revision
+          value: main
+
+    - name: get-short-sha
+      taskRef:
+        name: generate-short-sha
+      runAfter:
+        - fetch-source
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: build-and-push
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      runAfter:
+        - get-short-sha # Alterado para rodar após o short-sha
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: IMAGE
+          # Alterado para usar o hash curto
+          value: "$(params.IMAGE_REGISTRY_URL):$(tasks.get-short-sha.results.short-sha)"
+
+    - name: update-gitops
+      taskRef:
+        name: update-gitops-helm
+      runAfter:
+        - build-and-push
+      params:
+        - name: APP_NAME
+          value: $(params.APP_NAME)
+        - name: NEW_TAG
+          # Alterado para usar o hash curto no repositório Helm
+          value: "$(tasks.get-short-sha.results.short-sha)"
+        - name: GITOPS_REPO
+          value: $(params.GITOPS_REPO)

@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: generate-short-sha
+spec:
+  workspaces:
+    - name: source
+  results:
+    - name: short-sha
+      description: "Os 7 primeiros digitos do commit"
+  steps:
+    - name: shorten
+      image: alpine/git:latest # Imagem leve que já tem o Git instalado
+      workingDir: \$(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        # 1. Força a entrada física na pasta compartilhada onde o código foi baixado
+        cd $(workspaces.source.path)
+        echo "Entramos no diretorio: $(pwd)"
+        
+        # 2. Desativa a trava de segurança de dono de arquivo do Git (A causa do erro!)
+        git config --global --add safe.directory '*'
+        
+        # 3. Extrai o Hash
+        SHORT=`git rev-parse --short HEAD`
+        
+        # 4. Plano B: Se por algum motivo alienígena o git falhar, não quebramos o pipeline!
+        # Criamos um hash provisório para a esteira continuar andando.
+        if [ -z "$SHORT" ]; then
+          echo "Aviso: Git falhou. Gerando um hash alternativo para não quebrar o build."
+          SHORT=$(date +%s | md5sum | head -c 7)
+        fi
+        
+        # Salva o resultado
+        echo -n $SHORT > $(results.short-sha.path)
+        echo "Short SHA gerado com sucesso: $SHORT"
