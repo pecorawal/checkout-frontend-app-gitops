@@ -22,6 +22,7 @@ A aplicação **checkout-frontend** é uma aplicação que simula o frontend de 
 ├── server.js
 └── tree.bak
 
+4 directories, 12 files
 ```
 <!-- readme-tree end -->
 
