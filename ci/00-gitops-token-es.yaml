@@ -6,7 +6,7 @@ spec:
   refreshInterval: 1h
   secretStoreRef:
     kind: ClusterSecretStore
-    name: gcp-cluster-secretstore # O que você já tem funcionando
+    name: aro-cluster-secretstore # O que você já tem funcionando
   target:
     name: github-creds # O nome do Secret que o Kubernetes vai criar
     template:
